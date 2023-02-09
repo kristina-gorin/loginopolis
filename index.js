@@ -1,6 +1,9 @@
 const express = require('express');
 const app = express();
 const { User } = require('./db');
+const bcrypt = require('bcrypt')
+
+const SALT_COUNT = 10;
 
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
@@ -19,12 +22,17 @@ app.get('/', async (req, res, next) => {
 app.post('/register',async (req,res,next)=>{
   try{
     const {username,password} = req.body;
-  
+    const hash = await bcrypt.hash(password,SALT_COUNT)
+
   await User.create({
     username,
-    password
+    password:hash
   })
-  res.send(username)
+  const [foundUser] = await User.findAll({where:{username}})
+  console.log(foundUser.password)
+  console.log("hashed password: ",hash)
+  res.send("successfully created user "+username)
+  
 }
   catch (error) {
     next(error)
